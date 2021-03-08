@@ -2,8 +2,10 @@
 const RustPlus = require('@liamcottle/rustplus.js');
 const Lifx = require('node-lifx-lan');
 
+//instantiating rustplus using environment variables which are set prior to running
 const rustPlus = new RustPlus(process.env.SERVER_IP, process.env.SERVER_PORT, process.env.STEAM_ID, process.env.PLAYER_TOKEN);
 
+//setting constants for the entity IDs 
 const SMART_ALARM_ENTITY_ID = 21499543;
 const DOWNSTAIRS_LIGHT_ID = 22628776;
 const UPSTAIRS_LIGHT_ID = 22605021;
@@ -12,11 +14,9 @@ const DOORS = 22759038;
 rustPlus.on('connected', () => {
 	console.log("Rust+ API connected");
 	console.log(process.env.SERVER_IP + " " + process.env.SERVER_PORT + " " + process.env.STEAM_ID + " " + process.env.PLAYER_TOKEN);
-	rustPlus.sendTeamMessage(`[WillBot] Connected.`);
+	rustPlus.sendTeamMessage(`[WillBot] Connected.`); //sends message to initialise
 
-
-
-	rustPlus.getEntityInfo(SMART_ALARM_ENTITY_ID, (message) => { //getting state of smart alarm with ID 21499543
+	rustPlus.getEntityInfo(SMART_ALARM_ENTITY_ID, (message) => { //getting state of smart alarm - changes won't register without this
 		console.log("getEntityInfo response message: " + JSON.stringify(message));
 		return true;
 	})
@@ -33,13 +33,12 @@ rustPlus.on('connected', () => {
 		return true;
 	})*/
 
-	rustPlus.on('message', (message) => { //displaying console messages in chat without repeating bot messages
+	rustPlus.on('message', (message) => { //message logging
 		if (message.broadcast && message.broadcast.teamMessage && !message.broadcast.teamMessage.message.message.startsWith('[WillBot]')) {
-			message.broadcast.teamMessage.message.name
 			console.log("message received: " + JSON.stringify(message));
 		}
 		if (message.broadcast && message.broadcast.teamMessage && message.broadcast.teamMessage.message.message.startsWith('§Bot connected (Message needed to setup connection rust -​> discord)')) {
-			console.log("message received: " + JSON.stringify(message));
+			console.log("message received: " + JSON.stringify(message)); //only for fun - interacts with Sekwah41's bot
 			rustPlus.sendTeamMessage("Hello there Sekwah's bot! How are you today?");
 		}
 		if (message.broadcast && message.broadcast.entityChanged) {
@@ -88,7 +87,7 @@ rustPlus.on('connected', () => {
 			} else {
 				Lifx.discover({ wait: 3000 }).then((device_list) => {
 					dev = device_list[0]; //nice
-					// Set the color to white     
+					// Set the color to white when alarm is deactivated    
 					return dev.lightSetColor({
 						color: {
 							hue: 1.0,
@@ -107,11 +106,12 @@ rustPlus.on('connected', () => {
 		}
 	});
 
-	setInterval(keepAlive, 10000);
+	setInterval(keepAlive, 10000); //runs every 10 seconds to make sure the connection doesn't drop
 
 
 }); //onconnected
 
+//earlier attempt to fix disconnection issue
 rustPlus.on('disconnected', () => {
 	console.log("Disconnected! Trying to reconnect...")
 	rustPlus.connect();
@@ -128,8 +128,8 @@ function getName(id) {
 	}
 }
 
-function keepAlive() {
-	rustPlus.getInfo(message => {
+function keepAlive() { //keeping the connection alive
+	rustPlus.getInfo(message => { 
 		console.log(message);
 	})
 }
